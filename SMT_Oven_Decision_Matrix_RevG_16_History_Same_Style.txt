@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SMT Oven Decision Matrix | RevG.3</title>
+<style>
+:root{
+  --navy:#071a33; --navy2:#0c284b; --blue:#1976d2; --blue2:#4da3ff;
+  --bg:#f4f7fb; --card:#fff; --text:#172033; --muted:#667085;
+  --line:#e5eaf1; --success:#168a57; --warning:#b7791f; --danger:#c53030;
+  --shadow:0 10px 30px rgba(20,42,70,.08); --radius:16px;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh}
+button,input{font:inherit}
+.side{width:270px;background:linear-gradient(180deg,var(--navy),#0a2140);color:#fff;min-height:100vh;padding:22px 16px;position:fixed;left:0;top:0;bottom:0;z-index:10}
+.brand{padding:4px 10px 22px;border-bottom:1px solid rgba(255,255,255,.12);margin-bottom:18px}
+.brand img{width:185px;display:block;margin:0 auto 12px}
+.brand-title{font-size:13px;color:#b9c9dc;text-align:center;letter-spacing:.4px}
+.step{width:100%;border:0;background:transparent;text-align:left;padding:10px 12px;border-radius:9px;color:#475467;font-size:12px;font-weight:650;cursor:pointer;display:block}
+.step:hover{background:rgba(255,255,255,.08);color:#fff}
+.step.active{background:linear-gradient(90deg,#1976d2,#155db0);color:#fff;box-shadow:0 6px 18px rgba(25,118,210,.25)}
+.num{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.1);display:grid;place-items:center;font-weight:700;font-size:12px;flex:none}
+.step.active .num{background:#fff;color:#155db0}
+.step-text strong{display:block;font-size:14px}
+.step-text small{display:block;font-size:11px;opacity:.7;margin-top:2px}
+.side-footer{position:absolute;bottom:18px;left:16px;right:16px;color:#9eb1c8;font-size:11px;line-height:1.5;text-align:center}
+.main{margin-left:270px;flex:1;padding:28px;max-width:1500px}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:22px}
+.eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:1.2px;color:var(--blue);font-weight:800}
+h1{font-size:27px;margin:4px 0 3px;letter-spacing:-.5px}
+.subtitle{color:var(--muted);font-size:13px}
+.actions{display:flex;gap:9px}
+.btn{border:1px solid var(--line);background:#fff;padding:9px 13px;border-radius:10px;cursor:pointer;color:#344054;font-weight:600}
+.btn:hover{border-color:#b8c4d3;background:#f9fafb}
+.btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}
+.page{display:none;animation:fade .18s ease}
+.page.active{display:block}
+@keyframes fade{from{opacity:.2;transform:translateY(3px)}to{opacity:1;transform:none}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin-bottom:16px;box-shadow:var(--shadow)}
+.card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:17px}
+.card h2,.card h3{margin:0}
+.card h3{font-size:16px}
+.card-desc{font-size:12px;color:var(--muted);margin-top:4px}
+.badge{font-size:11px;font-weight:700;padding:5px 9px;border-radius:999px;background:#eef5ff;color:#175ea8}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:12px;font-weight:650;color:#344054}
+.field .unit{font-size:10px;color:#98a2b3;font-weight:500}
+input[type=number]{width:100%;border:1px solid #d7dee8;background:#fbfcfe;border-radius:10px;padding:11px 12px;outline:none;color:#172033;transition:.2s}
+.choice-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.choice{display:flex;align-items:center;gap:7px;border:1px solid #d7dee8;background:#fbfcfe;border-radius:10px;padding:9px 13px;cursor:pointer;font-size:12px;font-weight:650;color:#344054}
+.choice input{accent-color:var(--blue)}
+.applicability{margin-bottom:17px;padding:12px 14px;background:#f7f9fc;border:1px solid var(--line);border-radius:12px;display:flex;justify-content:space-between;align-items:center;gap:15px}
+.applicability-label strong{display:block;font-size:13px}.applicability-label span{display:block;font-size:11px;color:var(--muted);margin-top:3px}
+.optional-section.disabled{opacity:.48}.optional-section.disabled input[type=number]{background:#eef1f5;cursor:not-allowed}
+.help-note{font-size:11px;color:var(--muted);margin-top:8px}
+.measure-guide{margin-top:16px;border:1px solid var(--line);border-radius:12px;background:#fbfcfe;padding:14px}
+.measure-title{font-size:12px;font-weight:750;color:#344054;margin-bottom:8px}
+.measure-guide svg{width:100%;height:auto;display:block}
+.measure-caption{font-size:10px;color:var(--muted);margin-top:7px}
+.oven-visual{margin-top:18px;border:1px solid var(--line);border-radius:14px;background:#fbfcfe;padding:16px}
+.oven-title{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}
+.oven-title strong{font-size:13px}.oven-title span{font-size:11px;color:var(--muted)}
+.oven-svg{width:100%;height:auto;display:block}
+.zone-summary{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.zone-chip{font-size:10px;font-weight:700;border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 9px;color:#344054}
+.zone-chip.heat{border-color:#f1b0b0;background:#fff5f5;color:#b42318}
+.zone-chip.cool{border-color:#a9c7f5;background:#f3f8ff;color:#175ea8}
+
+
+
+input[type=number]:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(25,118,210,.12);background:#fff}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.metric{background:#fff;border:1px solid var(--line);border-radius:14px;padding:17px;box-shadow:var(--shadow)}
+.metric .t{font-size:11px;color:var(--muted);font-weight:650;text-transform:uppercase;letter-spacing:.45px}
+.metric .v{font-size:24px;font-weight:800;margin-top:8px;letter-spacing:-.5px}
+.metric.accent{border-top:3px solid var(--blue)}
+.metric.success{border-top:3px solid var(--success)}
+.metric.warning{border-top:3px solid var(--warning)}
+.metric.danger{border-top:3px solid var(--danger)}
+.hero{display:grid;grid-template-columns:1.25fr .75fr;gap:16px;margin-bottom:16px}
+.score-card{background:linear-gradient(135deg,#0b2547,#103f75);color:#fff;border-radius:18px;padding:23px;box-shadow:var(--shadow)}
+.score-label{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#b8d3ee}
+.score{font-size:58px;font-weight:850;line-height:1;margin:8px 0}
+.score-class{font-size:20px;font-weight:750}
+.score-track{height:9px;background:rgba(255,255,255,.16);border-radius:99px;overflow:hidden;margin-top:18px}
+.score-fill{height:100%;width:0;background:#fff;border-radius:99px;transition:.35s}
+.info-card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:23px;box-shadow:var(--shadow)}
+.info-row{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);font-size:13px}
+.info-row:last-child{border-bottom:0}
+.info-row span:last-child{font-weight:750}
+.bar-row{margin:17px 0}
+.bar-title{display:flex;justify-content:space-between;font-size:12px;font-weight:700;margin-bottom:7px}
+.bar{height:12px;background:#e9eef5;border-radius:99px;overflow:hidden}
+.fill{height:100%;width:0;background:linear-gradient(90deg,var(--blue),var(--blue2));color:transparent;border-radius:99px;transition:width .35s}
+.legend{display:flex;flex-wrap:wrap;gap:7px;margin-top:17px}
+.legend span{font-size:10px;background:#f1f4f8;border:1px solid var(--line);padding:6px 8px;border-radius:8px;color:#475467}
+.callout{padding:13px 15px;border-radius:11px;background:#f5f9ff;border:1px solid #d9eaff;color:#31506f;font-size:12px;line-height:1.55}
+.footer-nav{display:flex;justify-content:space-between;margin-top:20px}
+.progress-wrap{display:flex;align-items:center;gap:10px;margin:0 0 20px}
+.progress{height:6px;background:#e7edf5;border-radius:99px;flex:1;overflow:hidden}
+.progress i{display:block;height:100%;background:var(--blue);width:20%;transition:.25s}
+.progress-text{font-size:11px;color:var(--muted);font-weight:700}
+@media(max-width:1100px){.grid{grid-template-columns:repeat(2,1fr)}.metrics{grid-template-columns:repeat(2,1fr)}.hero{grid-template-columns:1fr}}
+@media(max-width:760px){
+  body{display:block} .side{position:relative;width:100%;min-height:auto;padding:12px} .brand{padding-bottom:12px;margin-bottom:8px}
+  .brand img{width:140px;margin-bottom:4px} .brand-title,.side-footer{display:none}
+  .steps{display:grid;grid-template-columns:repeat(5,1fr);gap:5px} .step{justify-content:center;text-align:center;padding:8px 3px;margin:0;gap:4px}
+  .step-text{display:none} .num{width:25px;height:25px} .main{margin-left:0;padding:16px}
+  h1{font-size:22px} .actions{display:none} .grid,.metrics{grid-template-columns:1fr} .score{font-size:48px}
+}
+
+.help-btn{border:1px solid #cbd5e1;background:#fff;color:#175ea8;border-radius:9px;padding:7px 10px;font-size:11px;font-weight:700;cursor:pointer}
+.help-btn:hover{background:#f3f8ff;border-color:#9ab9df}
+.help-modal{display:none;position:fixed;inset:0;background:rgba(7,26,51,.42);z-index:50;padding:24px;align-items:center;justify-content:center}
+.help-modal.open{display:flex}
+.help-panel{width:min(760px,100%);max-height:90vh;overflow:auto;background:#fff;border-radius:16px;border:1px solid var(--line);box-shadow:0 20px 60px rgba(10,35,65,.22);padding:20px}
+.help-panel-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.help-panel-head h3{margin:0;font-size:18px}.help-close{border:0;background:#eef2f6;border-radius:9px;padding:7px 10px;cursor:pointer;font-weight:700}
+.help-section{border-top:1px solid var(--line);padding:14px 0}.help-section:first-child{border-top:0;padding-top:0}
+.help-section strong{font-size:13px}.help-section p{font-size:12px;line-height:1.55;color:#475467;margin:5px 0 10px}
+.measure-svg{width:100%;height:auto;display:block;background:#fbfcfe;border:1px solid var(--line);border-radius:10px}
+
+
+.history-table{width:100%;border-collapse:collapse;font-size:11px}
+.history-table th,.history-table td{padding:10px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+.history-table th{font-size:10px;text-transform:uppercase;color:var(--muted);letter-spacing:.05em}
+.history-empty{padding:30px;text-align:center;color:var(--muted);font-size:12px}
+.history-actions{display:flex;gap:5px;flex-wrap:wrap}
+.btn.danger{color:#b42318;border-color:#f0b8b8;background:#fff7f7}
+.btn.primary{background:#175ea8;color:white;border-color:#175ea8}
+.detail-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.detail-item{border:1px solid var(--line);border-radius:9px;padding:9px;background:#fbfcfe}
+.detail-item .k{font-size:9px;color:var(--muted);text-transform:uppercase}.detail-item .v{font-size:12px;font-weight:700;margin-top:3px}
+@media(max-width:760px){.detail-grid{grid-template-columns:1fr 1fr}.history-table{min-width:720px}.card:has(.history-table){overflow:auto}}
+
+
+.step{width:100%;border:0;background:transparent;text-align:left;padding:10px 12px;border-radius:9px;color:#dbe7f5;font-size:12px;font-weight:650;cursor:pointer;display:flex;align-items:center;gap:10px;box-sizing:border-box}
+.step:hover{background:rgba(255,255,255,.08)}
+.step.active{background:#1683f7;color:#fff}
+.step-num{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.08);color:#dbe7f5;font-size:11px;font-weight:700;flex:0 0 28px}
+.step.active .step-num{background:rgba(255,255,255,.12);color:#fff}
+.step-copy{display:flex;flex-direction:column;min-width:0}
+.step-copy strong{font-size:12px;line-height:1.25;font-weight:750}
+.step-copy small{font-size:10px;line-height:1.3;margin-top:2px;color:rgba(219,231,245,.72);font-weight:500}
+.step.active .step-copy small{color:rgba(255,255,255,.78)}
+
+</style>
+</head>
+<body>
+<aside class="side">
+  <div class="brand">
+    <img alt="Flex Logo" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPScyMDAnIGhlaWdodD0nNjAnPjx0ZXh0IHg9JzAnIHk9JzQ1JyBmb250LXNpemU9JzUwJyBmb250LWZhbWlseT0nQXJpYWwnIGZpbGw9J3doaXRlJz5mbGV4PC90ZXh0Pjwvc3ZnPg==">
+    <div class="brand-title">SMT OVEN DECISION MATRIX</div>
+  </div>
+  <div class="steps">
+    <button class="step" type="button" onclick="showP('inputs',1)">
+      <span class="step-num">1</span>
+      <span class="step-copy"><strong>Inputs</strong><small>Product data</small></span>
+    </button>
+    <button class="step" onclick="showP('class',2)"><span class="num">2</span><span class="step-text"><strong>Classification</strong><small>Complexity score</small></span></button>
+    <button class="step" type="button" onclick="showP('oven',3)">
+      <span class="step-num">3</span>
+      <span class="step-copy"><strong>Oven</strong><small>Configuration</small></span>
+    </button>
+    <button class="step" onclick="showP('dash',4)"><span class="num">4</span><span class="step-text"><strong>Dashboard</strong><small>Visual summary</small></span></button>
+    <button class="step" onclick="showP('disc',5)"><span class="num">5</span><span class="step-text"><strong>Notes</strong><small>Disclaimers</small></span></button>
+<button class="step" type="button" onclick="showP('history',6)">
+      <span class="step-num">6</span>
+      <span class="step-copy"><strong>History</strong><small>Saved consultations</small></span>
+    </button>
+  </div>
+  <div class="side-footer">RevG.3 Integrated<br>Decision-support tool</div>
+</aside>
+
+<main class="main">
+  <header class="topbar">
+    <div>
+      <div class="eyebrow">Process Engineering</div>
+      <h1>SMT Oven Decision Matrix</h1>
+      <div class="subtitle">Product complexity assessment and oven configuration guidance</div>
+    </div>
+    <div class="actions">
+      <button class="btn" onclick="resetForm()">Reset</button>
+      <button class="btn primary" onclick="showP('class',2)">View Results →</button>
+    </div>
+  </header>
+
+  <div class="progress-wrap"><div class="progress"><i id="progress"></i></div><span id="progressText" class="progress-text">0 / 20 inputs</span></div>
+
+  <section id="inputs" class="page active">
+    <div class="card">
+      <div class="card-head"><div><h3>PCB</h3><div class="card-desc">Board geometry, construction and atmosphere requirements</div></div><div><span class="badge">8 parameters</span> <button class="help-btn" type="button" data-help="pcbHelp">ⓘ Help</button></div></div>
+      <div class="grid">
+      <div class="field" style="grid-column:1/-1"><label>Product / Assembly <span class="unit">Optional</span></label><input id="productName" type="text" placeholder="e.g. Product name, assembly or board number"></div>
+
+        <div class="field"><label>PCB Length <span class="unit">in</span></label><input id="i1" type="number" step="any" placeholder="e.g. 24"></div>
+        <div class="field"><label>PCB Width <span class="unit">in</span></label><input id="i2" type="number" step="any" placeholder="e.g. 18"></div>
+        <div class="field"><label>PCB Thickness <span class="unit">mm</span></label><input id="i3" type="number" step="any" placeholder="e.g. 5.3"></div>
+        <div class="field"><label>Layer Count</label><input id="i4" type="number" step="1" placeholder="e.g. 20"></div>
+        <div class="field"><label>PCB Weight <span class="unit">g</span></label><input id="i5" type="number" step="any" placeholder="e.g. 3.5"></div>
+        <div class="field"><label>Top Z Height <span class="unit">mm</span></label><input id="i6" type="number" step="any" placeholder="e.g. 20"></div>
+        <div class="field"><label>Bottom Z Height <span class="unit">mm</span></label><input id="i7" type="number" step="any" placeholder="e.g. 20"></div>
+        <div class="field"><label>O₂ Requirement <span class="unit">ppm</span></label><input id="i8" type="number" step="any" placeholder="e.g. 1000"></div>
+      </div></div></div>
+
+    
+      <div style="margin-top:14px;padding:12px 14px;border:1px solid #f0c36a;background:#fff9e8;border-radius:10px;color:#6b4f00;font-size:12px;line-height:1.5">
+        <strong>⚠ Pallet / Carrier Note:</strong> If the PCB is processed using a pallet or carrier, use the <strong>pallet/carrier dimensions</strong> for the applicable PCB dimensions and add the <strong>pallet/carrier weight + PCB weight</strong> for the total weight used in this assessment.
+      </div>
+</div>
+
+    <div class="card optional-section" id="asicSection">
+      <div class="card-head"><div><h3>ASIC / BGA</h3><div class="card-desc">Largest or most thermally demanding ASIC/BGA characteristics</div></div><div><span class="badge" id="asicBadge">Applicable</span> <button class="help-btn" type="button" data-help="asicHelp">ⓘ Help</button></div></div>
+      <div class="applicability">
+        <div class="applicability-label"><strong>Does ASIC / BGA apply to this product?</strong><span>Select No if this assembly does not contain an ASIC/BGA that should be evaluated.</span></div>
+        <div class="choice-row">
+          <label class="choice"><input type="radio" name="asicApply" value="yes" checked> Yes</label>
+          <label class="choice"><input type="radio" name="asicApply" value="no"> No</label>
+        </div>
+      </div>
+      <div class="grid">
+        <div class="field"><label>BGA Length <span class="unit">mm</span></label><input id="i9" type="number" step="any" placeholder="e.g. 110" disabled></div>
+        <div class="field"><label>BGA Width <span class="unit">mm</span></label><input id="i10" type="number" step="any" placeholder="e.g. 110" disabled></div>
+        <div class="field"><label>BGA Thickness <span class="unit">mm</span></label><input id="i11" type="number" step="any" placeholder="e.g. 7" disabled></div>
+        <div class="field"><label>BGA Ball Count</label><input id="i12" type="number" step="1" placeholder="e.g. 4000" disabled></div>
+        <div class="field"><label>BGA Weight <span class="unit">g</span></label><input id="i13" type="number" step="any" placeholder="e.g. 0.5" disabled></div>
+        <div class="field"><label>Number of BGA / Unit</label><input id="i14" type="number" step="1" placeholder="e.g. 2" disabled></div>
+      </div></div>
+<div class="help-note">Measurement guidance can be added here with a technical drawing for BGA Length, Width and Thickness.</div>
+    </div>
+
+    <div class="card optional-section" id="vpmSection">
+      <div class="card-head"><div><h3>VPM</h3><div class="card-desc">VPM package dimensions and assembly complexity</div></div><div><span class="badge" id="vpmBadge">Applicable</span> <button class="help-btn" type="button" data-help="vpmHelp">ⓘ Help</button></div></div>
+      <div class="applicability">
+        <div class="applicability-label"><strong>Does VPM apply to this product?</strong><span>Select No if the assembly does not contain a VPM that should be evaluated.</span></div>
+        <div class="choice-row">
+          <label class="choice"><input type="radio" name="vpmApply" value="yes" checked> Yes</label>
+          <label class="choice"><input type="radio" name="vpmApply" value="no"> No</label>
+        </div>
+      </div>
+      <div class="grid">
+        <div class="field"><label>VPM Length <span class="unit">mm</span></label><input id="i15" type="number" step="any" placeholder="e.g. 65" disabled></div>
+        <div class="field"><label>VPM Width <span class="unit">mm</span></label><input id="i16" type="number" step="any" placeholder="e.g. 65" disabled></div>
+        <div class="field"><label>VPM Thickness <span class="unit">mm</span></label><input id="i17" type="number" step="any" placeholder="e.g. 7" disabled></div>
+        <div class="field"><label>VPM Ball Count</label><input id="i18" type="number" step="1" placeholder="e.g. 2500" disabled></div>
+        <div class="field"><label>VPM Weight <span class="unit">g</span></label><input id="i19" type="number" step="any" placeholder="e.g. 0.4" disabled></div>
+        <div class="field"><label>Number of VPM / Unit</label><input id="i20" type="number" step="1" placeholder="e.g. 1" disabled></div>
+      </div></div>
+<div class="help-note">Measurement guidance can be added here with a technical drawing for VPM Length, Width and Thickness.</div>
+    </div>
+
+    <div class="callout">Enter the product parameters above. The classification and oven guidance update automatically as information is entered.</div>
+    <div class="footer-nav"><span></span><button class="btn primary" onclick="showP('class',2)">Continue to Classification →</button></div>
+  </section>
+
+  <section id="class" class="page">
+    <div class="hero">
+      <div class="score-card">
+        <div class="score-label">Total Weighted Score</div>
+        <div id="score" class="score">0</div>
+        <div id="clsHero" class="score-class">Waiting for Inputs</div>
+        <div class="score-track"><div id="scoreFill" class="score-fill"></div></div>
+      </div>
+      <div class="info-card">
+        <div class="info-row"><span>Qualification Criteria</span><span id="qm">0 / 20</span></div>
+        <div class="info-row"><span>20/20 Qualification</span><span id="qs">Not Qualified</span></div>
+        <div class="info-row"><span>PCB Weight</span><span>40%</span></div>
+        <div class="info-row"><span>ASIC Weight</span><span>40%</span></div>
+        <div class="info-row"><span>VPM Weight</span><span>20%</span></div><div class="info-row"><span>Applicable Blocks</span><span id="appBlocks">PCB</span></div>
+      </div>
+    </div>
+    <div class="metrics">
+      <div class="metric accent"><div class="t">Weighted PCB Score</div><div id="pcb" class="v">0</div></div>
+      <div class="metric accent"><div class="t">Weighted ASIC Score</div><div id="asic" class="v">0</div></div>
+      <div class="metric accent"><div class="t">Weighted VPM Score</div><div id="vpm" class="v">0</div></div>
+      <div class="metric success"><div class="t">Total Weighted Score</div><div id="tot" class="v">0</div></div>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <div class="card-head"><div><h3>Classification Scale</h3><div class="card-desc">Score bands used by the current decision matrix</div></div></div>
+      <div class="legend">
+        <span>Low · 0–30</span><span>Medium · 31–50</span><span>High · 51–70</span><span>Advanced · 71–90</span><span>Emerging Technologies · 91–100</span>
+      </div>
+    </div>
+    <div class="footer-nav"><button class="btn" onclick="showP('inputs',1)">← Back to Inputs</button><button class="btn primary" onclick="showP('oven',3)">View Oven Recommendation →</button></div>
+  </section>
+
+  <section id="oven" class="page">
+    <div class="card">
+      <div class="card-head"><div><h3>Recommended Oven Configuration</h3><div class="card-desc">Configuration guidance generated from the current classification</div></div><span id="rsBadge" class="badge">20/20 Not Met</span></div>
+      <div class="metrics">
+        <div class="metric"><div class="t">Heating Zones</div><div id="hz" class="v">Not Defined</div></div>
+        <div class="metric"><div class="t">Cooling Zones</div><div id="cz" class="v">Not Defined</div></div>
+        <div class="metric"><div class="t">Thermal Capacity</div><div id="tc" class="v">Not Defined</div></div>
+        <div class="metric"><div class="t">Nitrogen</div><div id="ni" class="v">Not Defined</div></div>
+      </div>
+    </div>
+
+    <div class="oven-visual">
+      <div class="oven-title">
+        <strong>Recommended Reflow Oven — Zone Layout</strong>
+        <span id="ovenVisualStatus">Waiting for classification</span>
+      </div>
+      <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:11px;font-weight:700;margin:0 0 8px;color:#475467">
+        <span style="color:#b42318">● Heating / Hot Zones</span>
+        <span style="color:#175ea8">● Cooling Zones</span>
+      </div>
+      <svg id="ovenSvg" class="oven-svg" viewBox="0 0 1000 280" role="img" aria-label="Schematic reflow oven showing heating and cooling zones">
+        <defs>
+          <marker id="ovenArrow" markerWidth="9" markerHeight="9" refX="4.5" refY="4.5" orient="auto">
+            <path d="M0,0 L9,4.5 L0,9 Z" fill="currentColor"/>
+          </marker>
+        </defs>
+        <text x="500" y="20" text-anchor="middle" font-size="15" font-weight="700" fill="currentColor">SMT REFLOW OVEN</text>
+        <text x="25" y="73" font-size="11" font-weight="700" fill="currentColor">ENTRY</text>
+        <line x1="70" y1="72" x2="930" y2="72" stroke="currentColor" stroke-width="2" marker-end="url(#ovenArrow)"/>
+        <g id="ovenZones"></g>
+        <text x="500" y="246" text-anchor="middle" font-size="11" fill="currentColor">PCB CONVEYOR / PROCESS DIRECTION →</text>
+        <text x="30" y="265" font-size="10" fill="currentColor">Heating</text>
+        <rect x="78" y="255" width="22" height="10" rx="2" fill="#d92d20" opacity=".9"/>
+        <text x="135" y="265" font-size="10" fill="currentColor">Cooling</text>
+        <rect x="183" y="255" width="22" height="10" rx="2" fill="#1769aa" opacity=".9"/>
+      </svg>
+      <div class="zone-summary">
+        <span class="zone-chip heat" id="heatChip">Heating: —</span>
+        <span class="zone-chip cool" id="coolChip">Cooling: —</span>
+        <span class="zone-chip" id="thermalChip">Thermal Capacity: —</span>
+        <span class="zone-chip" id="classChip">Classification: —</span>
+      </div>
+      <div class="measure-caption">Schematic visualization of the configuration recommended by this decision matrix. It is not a physical oven drawing and does not represent a specific manufacturer or model.</div>
+    </div>
+
+    <div class="metrics">
+      <div class="metric"><div class="t">Clearance</div><div id="cl" class="v">Not Defined</div></div>
+      <div class="metric"><div class="t">Qualification Check</div><div id="qc" class="v">Not Qualified</div></div>
+      <div class="metric"><div class="t">Recommendation Status</div><div id="rs" class="v">20/20 Qualification Not Met</div></div>
+      <div class="metric"><div class="t">Classification</div><div id="ovenClass" class="v">Waiting</div></div>
+    </div>
+    <div class="callout" style="margin-top:16px">This output is decision-support guidance. Final oven selection and configuration require engineering review, thermal profiling and process qualification.</div>
+    <div class="footer-nav"><button class="btn" onclick="showP('class',2)">← Back to Classification</button><button class="btn primary" onclick="showP('dash',4)">Open Dashboard →</button></div>
+  </section>
+
+  <section id="dash" class="page">
+    <div class="card">
+      <div class="card-head"><div><h3>Complexity Dashboard</h3><div class="card-desc">Relative contribution of each product category</div></div><span id="dashClass" class="badge">Waiting</span></div>
+      <div class="bar-row"><div class="bar-title"><span>PCB</span><span id="b1txt">0%</span></div><div class="bar"><div id="b1" class="fill"></div></div></div>
+      <div class="bar-row"><div class="bar-title"><span>ASIC / BGA</span><span id="b2txt">0%</span></div><div class="bar"><div id="b2" class="fill"></div></div></div>
+      <div class="bar-row"><div class="bar-title"><span>VPM</span><span id="b3txt">0%</span></div><div class="bar"><div id="b3" class="fill"></div></div></div>
+      <div class="bar-row"><div class="bar-title"><span>Total Weighted Score</span><span id="b4txt">0%</span></div><div class="bar"><div id="b4" class="fill"></div></div></div>
+    </div>
+    <div class="card">
+      <h3>Decision Summary</h3>
+      <div class="info-row"><span>Classification</span><span id="dashClass2">Waiting for Inputs</span></div>
+      <div class="info-row"><span>Qualification</span><span id="dashQual">Not Qualified</span></div>
+      <div class="info-row"><span>Oven recommendation</span><span id="dashRec">Not Defined</span></div><div class="info-row"><span>Applicable Blocks</span><span id="dashBlocks">PCB</span></div>
+    </div>
+    <div class="footer-nav"><button class="btn" onclick="showP('oven',3)">← Back to Oven</button><button class="btn primary" onclick="showP('disc',5)">View Notes →</button></div>
+  </section>
+
+  <section id="disc" class="page">
+    <div class="card">
+      <div class="card-head"><div><h3>Disclaimers & Usage Notes</h3><div class="card-desc">Guidance associated with the decision matrix</div></div></div>
+      <p>This tool is intended to guide Process Engineers in selecting the SMT reflow oven configuration that may be required based on product and component complexity.</p>
+      <p>It serves as a decision-support tool and should be used as a guideline in conjunction with engineering complexity analysis and process qualification activities.</p>
+      <p>It is focused to complex products with large PCB form factors, increased PCB thickness, large ASICs, VPMs, and other high-complexity components that require enhanced thermal process control and manufacturing capability.</p>
+      <h4>Disclaimer Notes</h4>
+      <ol>
+        <li>Process Engineering, Equipment Engineering, and Asset Management teams are responsible for defining the optimum oven configuration.</li>
+        <li>This tool does not recommend any specific oven manufacturer or brand.</li>
+        <li>Final SMT oven selection shall be validated through thermal profiling and qualification.</li>
+        <li>This matrix is intended as a guideline.</li>
+        <li>Any reflow oven can be configured based on process complexity requirements.</li>
+        <li>Oven configuration must be aligned with PCB and component complexity.</li>
+        <li>Products may fall between two categories.</li>
+        <li>This tool was not developed based on throughput requirements.</li>
+      </ol>
+    </div>
+    <div class="footer-nav"><button class="btn" onclick="showP('dash',4)">← Back to Dashboard</button></div>
+  
+    <div style="margin-top:22px;padding-top:18px;border-top:1px solid var(--line);display:flex;justify-content:flex-end">
+      <button id="saveConsultationBtn" class="btn primary" type="button" onclick="saveConsultation()">
+        💾 Save Consultation
+      </button>
+    </div>
+</section>
+
+<section id="history" class="page">
+  <div class="page-title">
+    <div>
+      <h2>Consultation History</h2>
+      <p>Saved locally in this browser. Each record stores the complete input snapshot and recommendation.</p>
+    </div>
+    <div class="actions">
+      <button class="btn" type="button" onclick="exportHistory()">Export JSON</button>
+      <button class="btn" type="button" onclick="importHistory()">Import JSON</button>
+      <button class="btn danger" type="button" onclick="clearHistory()">Clear History</button>
+    <button class="btn primary" type="button" onclick="saveConsultation()">Save Consultation</button></div>
+  </div>
+
+  <div class="card">
+    <div class="grid" style="grid-template-columns:2fr 1fr 1fr">
+      <div class="field"><label>Search</label><input id="historySearch" type="text" placeholder="Consultation ID, product, classification..."></div>
+      <div class="field"><label>Classification</label>
+        <select id="historyClass" style="width:100%;border:1px solid #d7dee8;background:#fbfcfe;border-radius:10px;padding:11px 12px">
+          <option value="">All</option><option>Low</option><option>Medium</option><option>High</option><option>Advanced</option><option>Emerging Technologies</option>
+        </select>
+      </div>
+      <div class="field"><label>Product / Assembly</label><input id="historyProduct" type="text" placeholder="Optional"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><div><h3>Saved Consultations</h3><div class="card-desc" id="historyCount">0 records</div></div></div>
+    <div id="historyTable"></div>
+  </div>
+
+  <div id="historyDetail" class="card" style="display:none">
+    <div class="card-head"><div><h3>Consultation Detail</h3><div class="card-desc" id="detailId"></div></div><button class="btn" type="button" onclick="closeHistoryDetail()">Close</button></div>
+    <div id="detailContent"></div>
+  </div>
+</section>
+
+</main>
+
+<div id="helpModal" class="help-modal" role="dialog" aria-modal="true">
+<div class="help-panel">
+<div class="help-panel-head"><h3 id="helpTitle">Measurement Guide</h3><button class="help-close" type="button" id="helpClose">Close</button></div>
+
+<div id="pcbHelp" class="help-content" style="display:none">
+<div class="help-section"><strong>PCB Length & Width</strong><p>Measure the overall board dimensions. Length is the longest dimension; width is perpendicular to it.</p>
+<svg class="measure-svg" viewBox="0 0 760 210" aria-label="PCB length and width">
+<defs><marker id="p1" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#1976d2"/></marker></defs>
+<rect x="190" y="65" width="390" height="105" rx="4" fill="#f7f9fc" stroke="#344054" stroke-width="2"/>
+<line x1="190" y1="35" x2="580" y2="35" stroke="#1976d2" stroke-width="2" marker-start="url(#p1)" marker-end="url(#p1)"/>
+<text x="385" y="22" text-anchor="middle" font-size="15" font-weight="700" fill="#175ea8">LENGTH</text>
+<line x1="145" y1="65" x2="145" y2="170" stroke="#1976d2" stroke-width="2" marker-start="url(#p1)" marker-end="url(#p1)"/>
+<text x="115" y="118" text-anchor="middle" font-size="15" font-weight="700" fill="#175ea8" transform="rotate(-90 115 118)">WIDTH</text>
+<text x="385" y="125" text-anchor="middle" font-size="12" fill="#667085">PCB — TOP VIEW</text></svg></div>
+<div class="help-section"><strong>PCB Thickness</strong><p>Measure the board thickness only. Do not include component height.</p>
+<svg class="measure-svg" viewBox="0 0 760 150" aria-label="PCB thickness">
+<defs><marker id="p2" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#1976d2"/></marker></defs>
+<rect x="210" y="65" width="340" height="30" fill="#f7f9fc" stroke="#344054" stroke-width="2"/>
+<line x1="585" y1="65" x2="585" y2="95" stroke="#1976d2" stroke-width="2" marker-start="url(#p2)" marker-end="url(#p2)"/>
+<text x="605" y="85" font-size="14" font-weight="700" fill="#175ea8">PCB THICKNESS</text></svg></div>
+<div class="help-section"><strong>Top Z & Bottom Z</strong><p>Top Z = maximum component height above the PCB. Bottom Z = maximum protrusion below the PCB.</p>
+<svg class="measure-svg" viewBox="0 0 760 220" aria-label="Top and bottom Z">
+<defs><marker id="p3" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#1976d2"/></marker></defs>
+<rect x="250" y="105" width="270" height="28" fill="#f7f9fc" stroke="#344054" stroke-width="2"/><rect x="345" y="52" width="80" height="53" fill="#fff" stroke="#344054" stroke-width="2"/>
+<line x1="465" y1="52" x2="465" y2="105" stroke="#1976d2" stroke-width="2" marker-start="url(#p3)" marker-end="url(#p3)"/><text x="485" y="82" font-size="13" font-weight="700" fill="#175ea8">TOP Z</text>
+<line x1="205" y1="133" x2="205" y2="200" stroke="#1976d2" stroke-width="2" marker-start="url(#p3)" marker-end="url(#p3)"/><text x="180" y="168" text-anchor="middle" font-size="13" font-weight="700" fill="#175ea8" transform="rotate(-90 180 168)">BOTTOM Z</text></svg></div>
+</div>
+
+<div id="asicHelp" class="help-content" style="display:none"><div class="help-section"><strong>ASIC / BGA Dimensions</strong><p>Measure the package body: Length, Width and Thickness. Use the largest relevant package.</p>
+<svg class="measure-svg" viewBox="0 0 760 220" aria-label="BGA dimensions">
+<defs><marker id="b1" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#1976d2"/></marker></defs>
+<polygon points="235,70 500,70 555,105 290,105" fill="#f7f9fc" stroke="#344054" stroke-width="2"/><polygon points="235,70 290,105 290,165 235,130" fill="#f7f9fc" stroke="#344054" stroke-width="2"/><polygon points="290,105 555,105 555,165 290,165" fill="#fff" stroke="#344054" stroke-width="2"/>
+<line x1="235" y1="42" x2="500" y2="42" stroke="#1976d2" stroke-width="2" marker-start="url(#b1)" marker-end="url(#b1)"/><text x="368" y="28" text-anchor="middle" font-size="14" font-weight="700" fill="#175ea8">LENGTH</text>
+<line x1="555" y1="105" x2="610" y2="72" stroke="#1976d2" stroke-width="2" marker-start="url(#b1)" marker-end="url(#b1)"/><text x="620" y="70" font-size="13" font-weight="700" fill="#175ea8">WIDTH</text>
+<line x1="580" y1="105" x2="580" y2="165" stroke="#1976d2" stroke-width="2" marker-start="url(#b1)" marker-end="url(#b1)"/><text x="600" y="140" font-size="13" font-weight="700" fill="#175ea8">THICKNESS</text></svg></div></div>
+
+<div id="vpmHelp" class="help-content" style="display:none"><div class="help-section"><strong>VPM Dimensions</strong><p>Measure Length, Width and Thickness according to the applicable internal VPM drawing/specification.</p>
+<svg class="measure-svg" viewBox="0 0 760 200" aria-label="VPM dimensions">
+<defs><marker id="v1" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#1976d2"/></marker></defs>
+<rect x="220" y="65" width="330" height="105" rx="5" fill="#f7f9fc" stroke="#344054" stroke-width="2"/>
+<line x1="220" y1="38" x2="550" y2="38" stroke="#1976d2" stroke-width="2" marker-start="url(#v1)" marker-end="url(#v1)"/><text x="385" y="25" text-anchor="middle" font-size="14" font-weight="700" fill="#175ea8">LENGTH</text>
+<line x1="175" y1="65" x2="175" y2="170" stroke="#1976d2" stroke-width="2" marker-start="url(#v1)" marker-end="url(#v1)"/><text x="145" y="118" text-anchor="middle" font-size="14" font-weight="700" fill="#175ea8" transform="rotate(-90 145 118)">WIDTH</text>
+<line x1="585" y1="65" x2="585" y2="170" stroke="#1976d2" stroke-width="2" marker-start="url(#v1)" marker-end="url(#v1)"/><text x="605" y="122" font-size="13" font-weight="700" fill="#175ea8">THICKNESS</text></svg></div></div>
+
+</div></div>
+
+<script>
+const inputs=[...document.querySelectorAll('input[type=number]')];
+const el=id=>document.getElementById(id);
+const pcbInputs=inputs.filter(x=>+x.id.slice(1)<=8);
+const asicInputs=inputs.filter(x=>+x.id.slice(1)>=9 && +x.id.slice(1)<=14);
+const vpmInputs=inputs.filter(x=>+x.id.slice(1)>=15 && +x.id.slice(1)<=20);
+
+function showP(x,n){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  el(x).classList.add('active');
+  document.querySelectorAll('.step').forEach((b,i)=>b.classList.toggle('active',i===n-1));
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function s(v,a,b,c,d){if(!v)return 0;if(v<=a)return 20;if(v<=b)return 40;if(v<=c)return 70;if(v<=d)return 90;return 100}
+function applied(name){return document.querySelector('input[name="'+name+'"]:checked')?.value==='yes'}
+
+function setOptional(sectionId, fieldList, on, badgeId){
+  el(sectionId).classList.toggle('disabled',!on);
+  fieldList.forEach(i=>{i.disabled=!on;if(!on)i.value=''});
+  el(badgeId).textContent=on?'Applicable':'Not Applicable';
+}
+
+function updateApplicability(){
+  const a=applied('asicApply'), v=applied('vpmApply');
+  setOptional('asicSection',asicInputs,a,'asicBadge');
+  setOptional('vpmSection',vpmInputs,v,'vpmBadge');
+  calc();
+}
+
+
+function renderOven(heatZones, coolZones, classification, thermal){
+  const g=el('ovenZones');
+  g.innerHTML='';
+  const total=heatZones+coolZones;
+  const left=82, right=918, y=92, h=105;
+  const gap=2;
+  const zoneW=Math.max(7,(right-left-gap*(total-1))/total);
+
+  for(let i=0;i<total;i++){
+    const heating=i<heatZones;
+    const x=left+i*(zoneW+gap);
+    const fill=heating?'#d92d20':'#1769aa';
+    const opacity=heating?.20:.16;
+    const strokeOpacity=heating?.70:.55;
+
+    const r=document.createElementNS('http://www.w3.org/2000/svg','rect');
+    r.setAttribute('x',x); r.setAttribute('y',y);
+    r.setAttribute('width',zoneW); r.setAttribute('height',h);
+    r.setAttribute('rx','2'); r.setAttribute('fill',fill);
+    r.setAttribute('fill-opacity',opacity);
+    r.setAttribute('stroke','currentColor'); r.setAttribute('stroke-opacity',strokeOpacity);
+    g.appendChild(r);
+
+    const t=document.createElementNS('http://www.w3.org/2000/svg','text');
+    t.setAttribute('x',x+zoneW/2); t.setAttribute('y',y+57);
+    t.setAttribute('text-anchor','middle'); t.setAttribute('font-size',zoneW>20?'9':'7');
+    t.setAttribute('fill',heating?'#b42318':'#175ea8');
+    t.setAttribute('font-weight','700');
+    t.textContent=heating?'H'+(i+1):'C'+(i-heatZones+1);
+    g.appendChild(t);
+  }
+
+  const dividerX=left+heatZones*(zoneW+gap)-gap/2;
+  const line=document.createElementNS('http://www.w3.org/2000/svg','line');
+  line.setAttribute('x1',dividerX); line.setAttribute('x2',dividerX);
+  line.setAttribute('y1',y-18); line.setAttribute('y2',y+h+15);
+  line.setAttribute('stroke','currentColor'); line.setAttribute('stroke-width','2');
+  line.setAttribute('stroke-dasharray','5 4'); line.setAttribute('stroke-opacity','.55');
+  g.appendChild(line);
+
+  const ht=document.createElementNS('http://www.w3.org/2000/svg','text');
+  ht.setAttribute('x',(left+dividerX)/2); ht.setAttribute('y','82');
+  ht.setAttribute('text-anchor','middle'); ht.setAttribute('font-size','10');
+  ht.setAttribute('font-weight','700'); ht.setAttribute('fill','currentColor');
+  ht.textContent='HEATING ZONES';
+  g.appendChild(ht);
+
+  const ct=document.createElementNS('http://www.w3.org/2000/svg','text');
+  ct.setAttribute('x',(dividerX+right)/2); ct.setAttribute('y','82');
+  ct.setAttribute('text-anchor','middle'); ct.setAttribute('font-size','10');
+  ct.setAttribute('font-weight','700'); ct.setAttribute('fill','currentColor');
+  ct.textContent='COOLING ZONES';
+  g.appendChild(ct);
+
+  el('ovenVisualStatus').textContent=classification+' · '+heatZones+' heating / '+coolZones+' cooling';
+  el('heatChip').textContent='Heating: '+heatZones+' zones';
+  el('coolChip').textContent='Cooling: '+coolZones+' zones';
+  el('thermalChip').textContent='Thermal Capacity: '+thermal;
+  el('classChip').textContent='Classification: '+classification;
+}
+
+function calc(){
+  const a=applied('asicApply'), v=applied('vpmApply');
+  const active=[...pcbInputs,...(a?asicInputs:[]),...(v?vpmInputs:[])];
+  const filled=active.filter(x=>x.value!=='').length, total=active.length;
+  el('progress').style.width=(filled/total*100)+'%';
+  el('progressText').textContent=filled+' / '+total+' applicable inputs';
+
+  const pcb=Math.round((s(+i1.value,10,15,24,30)+s(+i2.value,10,15,24,30)+s(+i3.value,2.5,4,5.3,8))/3);
+  const asic=a?Math.round((s(+i9.value,65,80,110,150)+s(+i10.value,65,80,110,150)+s(+i11.value,4,6,7,8))/3):0;
+  const vpm=v?Math.round((s(+i15.value,40,50,65,100)+s(+i16.value,40,50,65,100)+s(+i17.value,4,6,7,8))/3):0;
+
+  // Original 40/40/20 weights are preserved when all blocks apply.
+  // If a block is not applicable, its weight is redistributed proportionally.
+  const weights={pcb:.4}; if(a)weights.asic=.4; if(v)weights.vpm=.2;
+  const sum=Object.values(weights).reduce((x,y)=>x+y,0);
+  const t=Math.round(pcb*weights.pcb/sum+(a?asic*weights.asic/sum:0)+(v?vpm*weights.vpm/sum:0));
+  const c=t<=30?'Low':t<=50?'Medium':t<=70?'High':t<=90?'Advanced':'Emerging Technologies';
+  const qualified=filled===total;
+
+  el('pcb').textContent=pcb; el('asic').textContent=a?asic:'N/A'; el('vpm').textContent=v?vpm:'N/A'; el('tot').textContent=t;
+  el('score').textContent=t; el('clsHero').textContent=filled?c:'Waiting for Inputs'; el('ovenClass').textContent=filled?c:'Waiting';
+  el('scoreFill').style.width=t+'%';
+  el('qm').textContent=filled+' / '+total; el('qs').textContent=qualified?'Qualified':'Not Qualified';
+  el('qc').textContent=qualified?'Qualified':'Not Qualified'; el('rs').textContent=qualified?'Recommended':'Qualification Incomplete';
+  el('rsBadge').textContent=qualified?'Qualified':'Qualification Incomplete';
+
+  const map={Low:['10/10','3','Standard'],Medium:['13/13','3','Enhanced'],High:['15/15','4','Advanced'],Advanced:['17/17','5','Ultra High'],'Emerging Technologies':['20/20','5','Future Ultra']};
+  if(filled){
+    el('hz').textContent=map[c][0];
+    el('cz').textContent=map[c][1];
+    el('tc').textContent=map[c][2];
+    el('ni').textContent='Yes';
+    el('cl').textContent='29-70 mm';
+    renderOven(parseInt(map[c][0]),parseInt(map[c][1]),c,map[c][2]);
+  } else {
+    ['hz','cz','tc','ni','cl'].forEach(id=>el(id).textContent='Not Defined');
+    el('ovenVisualStatus').textContent='Waiting for classification';
+    el('heatChip').textContent='Heating: —';
+    el('coolChip').textContent='Cooling: —';
+    el('thermalChip').textContent='Thermal Capacity: —';
+    el('classChip').textContent='Classification: —';
+    el('ovenZones').innerHTML='';
+  }
+
+  const blocks=['PCB',...(a?['ASIC/BGA']:[]),...(v?['VPM']:[])].join(' · ');
+  el('appBlocks').textContent=blocks; el('dashBlocks').textContent=blocks;
+  [['b1',pcb],['b2',a?asic:0],['b3',v?vpm:0],['b4',t]].forEach(([id,val])=>{el(id).style.width=val+'%';el(id+'txt').textContent=(id==='b2'&&!a)||(id==='b3'&&!v)?'N/A':val+'%'});
+  el('dashClass').textContent=filled?c:'Waiting'; el('dashClass2').textContent=filled?c:'Waiting for Inputs';
+  el('dashQual').textContent=qualified?'Qualified':'Not Qualified'; el('dashRec').textContent=qualified?map[c][2]:'Not Defined';
+}
+
+function resetForm(){
+  inputs.forEach(i=>i.value='');
+  if(el('productName')) el('productName').value='';
+  document.querySelector('input[name="asicApply"][value="yes"]').checked=true;
+  document.querySelector('input[name="vpmApply"][value="yes"]').checked=true;
+  updateApplicability();
+  calc();
+  showP('inputs',1);
+}
+inputs.forEach(i=>i.addEventListener('input',calc));
+document.querySelectorAll('input[name="asicApply"],input[name="vpmApply"]').forEach(i=>i.addEventListener('change',updateApplicability));
+
+const helpModal=el('helpModal');
+document.querySelectorAll('[data-help]').forEach(btn=>btn.addEventListener('click',()=>{
+  document.querySelectorAll('.help-content').forEach(x=>x.style.display='none');
+  el(btn.dataset.help).style.display='block';
+  helpModal.classList.add('open');
+}));
+el('helpClose').addEventListener('click',()=>helpModal.classList.remove('open'));
+helpModal.addEventListener('click',e=>{if(e.target===helpModal)helpModal.classList.remove('open')});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')helpModal.classList.remove('open')});
+
+updateApplicability(); calc();
+
+const HISTORY_KEY='smtOvenDecisionMatrix.history.v1';
+
+function getHistory(){
+  try{return JSON.parse(localStorage.getItem(HISTORY_KEY)||'[]')}catch(e){return[]}
+}
+function setHistory(records){localStorage.setItem(HISTORY_KEY,JSON.stringify(records))}
+
+function collectInputs(){
+  const data={};
+  inputs.forEach(i=>data[i.id]=i.value);
+  data.productName=el('productName')?.value||'';
+  data.asicApply=applied('asicApply');
+  data.vpmApply=applied('vpmApply');
+  return data;
+}
+function currentResult(){
+  return {
+    score:el('score')?.textContent||'0',
+    classification:el('clsHero')?.textContent||'Waiting for Inputs',
+    pcbScore:el('pcb')?.textContent||'N/A',
+    asicScore:el('asic')?.textContent||'N/A',
+    vpmScore:el('vpm')?.textContent||'N/A',
+    heatingZones:el('hz')?.textContent||'Not Defined',
+    coolingZones:el('cz')?.textContent||'Not Defined',
+    thermalCapacity:el('tc')?.textContent||'Not Defined',
+    nitrogen:el('ni')?.textContent||'Not Defined',
+    clearance:el('cl')?.textContent||'Not Defined',
+    qualified:el('qc')?.textContent||'Not Qualified'
+  };
+}
+function saveConsultation(){
+  const records=getHistory();
+  const now=new Date();
+  const seq=(records.length?Math.max(...records.map(r=>Number((r.id||'').split('-').pop())||0)):0)+1;
+  const id='SMT-'+now.getFullYear()+'-'+String(seq).padStart(5,'0');
+  const record={
+    id, timestamp:now.toISOString(), product:el('productName')?.value.trim()||'Unnamed Assembly',
+    inputs:collectInputs(), result:currentResult()
+  };
+  records.unshift(record);
+  setHistory(records);
+  renderHistory();
+  showP('history',6);
+  const saveBtn=el('saveConsultationBtn');
+  if(saveBtn){
+    const oldText=saveBtn.innerHTML;
+    saveBtn.innerHTML='✓ Saved: '+id;
+    setTimeout(()=>saveBtn.innerHTML=oldText,2500);
+  }
+}
+function renderHistory(){
+  const q=(el('historySearch')?.value||'').toLowerCase().trim();
+  const cls=el('historyClass')?.value||'';
+  const product=(el('historyProduct')?.value||'').toLowerCase().trim();
+  const all=getHistory();
+  const rows=all.filter(r=>
+    (!q || [r.id,r.product,r.result.classification,r.result.score].join(' ').toLowerCase().includes(q)) &&
+    (!cls || r.result.classification===cls) &&
+    (!product || r.product.toLowerCase().includes(product))
+  );
+  el('historyCount').textContent=rows.length+' record'+(rows.length===1?'':'s')+(all.length!==rows.length?' · '+all.length+' total':'');
+  if(!rows.length){el('historyTable').innerHTML='<div class="history-empty">No saved consultations match the current filters.</div>';return}
+  let out='<table class="history-table"><thead><tr><th>ID</th><th>Date</th><th>Product / Assembly</th><th>Score</th><th>Classification</th><th>Oven</th><th></th></tr></thead><tbody>';
+  rows.forEach(r=>{
+    const d=new Date(r.timestamp);
+    out+=`<tr><td><strong>${esc(r.id)}</strong></td><td>${esc(d.toLocaleString())}</td><td>${esc(r.product)}</td><td><strong>${esc(r.result.score)}</strong></td><td>${esc(r.result.classification)}</td><td>${esc(r.result.heatingZones)} H / ${esc(r.result.coolingZones)} C</td><td><div class="history-actions"><button class="btn" onclick="viewHistory('${escAttr(r.id)}')">View</button><button class="btn" onclick="duplicateHistory('${escAttr(r.id)}')">Duplicate</button><button class="btn danger" onclick="deleteHistory('${escAttr(r.id)}')">Delete</button></div></td></tr>`;
+  });
+  out+='</tbody></table>'; el('historyTable').innerHTML=out;
+}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function escAttr(s){return esc(s).replace(/`/g,'&#96;')}
+function viewHistory(id){
+  const r=getHistory().find(x=>x.id===id); if(!r)return;
+  el('historyDetail').style.display='block'; el('detailId').textContent=r.id+' · '+new Date(r.timestamp).toLocaleString();
+  const labels={i1:'PCB Length (in)',i2:'PCB Width (in)',i3:'PCB Thickness (mm)',i4:'PCB Layers',i5:'PCB Weight (g)',i6:'Top Z Height (mm)',i7:'Bottom Z Height (mm)',i8:'O₂ Requirement (ppm)',i9:'BGA Length (mm)',i10:'BGA Width (mm)',i11:'BGA Thickness (mm)',i12:'BGA Ball Count',i13:'BGA Weight (g)',i14:'Number of BGA / Unit',i15:'VPM Length (mm)',i16:'VPM Width (mm)',i17:'VPM Thickness (mm)',i18:'VPM Ball Count',i19:'VPM Weight (g)',i20:'Number of VPM / Unit'};
+  let out='<div class="detail-grid"><div class="detail-item"><div class="k">Product / Assembly</div><div class="v">'+esc(r.product)+'</div></div><div class="detail-item"><div class="k">ASIC/BGA</div><div class="v">'+(r.inputs.asicApply?'Applicable':'Not Applicable')+'</div></div><div class="detail-item"><div class="k">VPM</div><div class="v">'+(r.inputs.vpmApply?'Applicable':'Not Applicable')+'</div></div>';
+  Object.keys(labels).forEach(k=>out+='<div class="detail-item"><div class="k">'+labels[k]+'</div><div class="v">'+esc(r.inputs[k]||'—')+'</div></div>');
+  out+='</div><div class="detail-grid" style="margin-top:12px"><div class="detail-item"><div class="k">Score</div><div class="v">'+esc(r.result.score)+'</div></div><div class="detail-item"><div class="k">Classification</div><div class="v">'+esc(r.result.classification)+'</div></div><div class="detail-item"><div class="k">Qualification</div><div class="v">'+esc(r.result.qualified)+'</div></div><div class="detail-item"><div class="k">Heating Zones</div><div class="v">'+esc(r.result.heatingZones)+'</div></div><div class="detail-item"><div class="k">Cooling Zones</div><div class="v">'+esc(r.result.coolingZones)+'</div></div><div class="detail-item"><div class="k">Thermal Capacity</div><div class="v">'+esc(r.result.thermalCapacity)+'</div></div></div>';
+  el('detailContent').innerHTML=out;
+  el('historyDetail').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function closeHistoryDetail(){el('historyDetail').style.display='none'}
+function deleteHistory(id){if(!confirm('Delete '+id+'?'))return;setHistory(getHistory().filter(r=>r.id!==id));renderHistory();closeHistoryDetail()}
+function duplicateHistory(id){
+  const r=getHistory().find(x=>x.id===id);if(!r)return;
+  inputs.forEach(i=>i.value=r.inputs[i.id]||'');
+  if(el('productName'))el('productName').value=r.product||'';
+  document.querySelector('input[name="asicApply"][value="'+(r.inputs.asicApply?'yes':'no')+'"]').checked=true;
+  document.querySelector('input[name="vpmApply"][value="'+(r.inputs.vpmApply?'yes':'no')+'"]').checked=true;
+  updateApplicability();calc();showP('inputs',1);
+}
+function exportHistory(){
+  const blob=new Blob([JSON.stringify(getHistory(),null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='SMT_Oven_Consultation_History.json';a.click();URL.revokeObjectURL(a.href);
+}
+function importHistory(){
+  const input=document.createElement('input');input.type='file';input.accept='.json,application/json';
+  input.onchange=()=>{const f=input.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{try{const incoming=JSON.parse(rd.result);if(!Array.isArray(incoming))throw Error();setHistory([...incoming,...getHistory()]);renderHistory();alert('History imported.')}catch(e){alert('Invalid history file.')}};rd.readAsText(f)};input.click();
+}
+function clearHistory(){if(!getHistory().length)return;if(!confirm('Clear all saved consultations?'))return;localStorage.removeItem(HISTORY_KEY);renderHistory();closeHistoryDetail()}
+['historySearch','historyClass','historyProduct'].forEach(id=>el(id)?.addEventListener('input',renderHistory));
+renderHistory();
+
+</script>
+</body>
+</html>
